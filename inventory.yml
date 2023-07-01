@@ -10,22 +10,6 @@ all:
   vars:
     username: notthebee
 
-    root_host: example.duckdns.org
-
-    enable_username_creation: yes
-
-    user_shell: /bin/bash
-
-    enable_passwordless_sudo: yes
-
-    # Whether or not you want to generate a public key pair for SSH auth
-    # The playbook will not generate a new pair if $HOME/.ssh/authorized_keys exists and isn't empty
-    enable_ssh_keygen: yes
-
-    # Uncomment this line if you already have a public SSH key and put your public key in it
-    # This overrides `enable_ssh_keygen`
-    # ssh_public_key: ""
-
     authelia_host: "auth.{{ root_host }}"
 
     wireguard_host: "wg.{{ root_host }}"
@@ -33,6 +17,10 @@ all:
     wireguard_subnet: "10.8.0.x"
 
     adguard_host: "adguard.{{ root_host }}"
+    adguard_panel_host: "agadmin.{{ root_host }}"
+
+    enable_adguard_and_webserver: true
+    webserver_host: "me.{{ root_host }}"
 
     wireguard_port: "51820"
 
@@ -87,20 +75,6 @@ all:
     msmtp_default_account: "mailbox"
 
     msmtp_alias_default: "{{ email }}"
-
-    enable_firewall: true
-    firewall_ports:
-      - port: "{{ wireguard_port }}"
-        proto: "udp"
-      - port: "80"
-        proto: "tcp"
-      - port: "443"
-        proto: "tcp"
-      - port: "{{ ssh_port }}"
-        proto: "tcp"
-
-    # Fail2Ban only comes with the SSH jail by default
-    enable_fail2ban: true
 
     pip_install_packages:
       - name: docker

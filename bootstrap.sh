@@ -126,14 +126,14 @@ elif [[ "$os" == "centos" ]]; then
   install_dependencies_centos
 fi
 
-# Clone the Ansible playbook
-if [ -d "$HOME/ansible-easy-vpn" ]; then
-  pushd $HOME/ansible-easy-vpn
-  git pull
-  popd
-else
-  git clone https://github.com/notthebee/ansible-easy-vpn $HOME/ansible-easy-vpn
-fi
+# # Clone the Ansible playbook
+# if [ -d "$HOME/ansible-easy-vpn" ]; then
+#   pushd $HOME/ansible-easy-vpn
+#   git pull
+#   popd
+# else
+#   git clone https://github.com/notthebee/ansible-easy-vpn $HOME/ansible-easy-vpn
+# fi
 
 # Set up a Python venv
 set +e
@@ -249,22 +249,22 @@ until [[ "$root_host" =~ ^[a-z0-9\.\-]*$ ]]; do
   read -p "Domain name: " root_host
 done
 
-public_ip=$(curl -s https://api.ipify.org)
-domain_ip=$(dig +short @1.1.1.1 ${root_host})
+#public_ip=$(curl -s https://api.ipify.org)
+#domain_ip=$(dig +short @1.1.1.1 ${root_host})
 
-until [[ $domain_ip =~ $public_ip ]]; do
-  echo
-  echo "The domain $root_host does not resolve to the public IP of this server ($public_ip)"
-  echo
-  root_host_prev=$root_host
-  read -p "Domain name [$root_host_prev]: " root_host
-  if [ -z ${root_host} ]; then
-    root_host=$root_host_prev
-  fi
-  public_ip=$(curl -s ipinfo.io/ip)
-  domain_ip=$(dig +short @1.1.1.1 ${root_host})
-  echo
-done
+#until [[ $domain_ip =~ $public_ip ]]; do
+#  echo
+#  echo "The domain $root_host does not resolve to the public IP of this server ($public_ip)"
+#  echo
+#  root_host_prev=$root_host
+#  read -p "Domain name [$root_host_prev]: " root_host
+#  if [ -z ${root_host} ]; then
+#    root_host=$root_host_prev
+#  fi
+#  public_ip=$(curl -s ipinfo.io/ip)
+#  domain_ip=$(dig +short @1.1.1.1 ${root_host})
+#  echo
+#done
 
 echo
 echo "Running certbot in dry-run mode to test the validity of the domain..."
@@ -309,25 +309,25 @@ fi
 
 echo "dns_nameservers: \"${dns_nameservers}\"" >> $HOME/ansible-easy-vpn/custom.yml
 
-if [[ ! $AWS_EC2 =~ true ]]; then
-  echo
-  echo "Would you like to use an existing SSH key?"
-  echo "Press 'n' if you want to generate a new SSH key pair"
-  echo
-  read -p "Use existing SSH key? [y/N]: " new_ssh_key_pair
-  until [[ "$new_ssh_key_pair" =~ ^[yYnN]*$ ]]; do
-          echo "$new_ssh_key_pair: invalid selection."
-          read -p "[y/N]: " new_ssh_key_pair
-  done
-  echo "enable_ssh_keygen: true" >> $HOME/ansible-easy-vpn/custom.yml
+# if [[ ! $AWS_EC2 =~ true ]]; then
+#   echo
+#   echo "Would you like to use an existing SSH key?"
+#   echo "Press 'n' if you want to generate a new SSH key pair"
+#   echo
+#   read -p "Use existing SSH key? [y/N]: " new_ssh_key_pair
+#   until [[ "$new_ssh_key_pair" =~ ^[yYnN]*$ ]]; do
+#           echo "$new_ssh_key_pair: invalid selection."
+#           read -p "[y/N]: " new_ssh_key_pair
+#   done
+#   echo "enable_ssh_keygen: true" >> $HOME/ansible-easy-vpn/custom.yml
 
-  if [[ "$new_ssh_key_pair" =~ ^[yY]$ ]]; then
-    echo
-    read -p "Please enter your SSH public key: " ssh_key_pair
+#   if [[ "$new_ssh_key_pair" =~ ^[yY]$ ]]; then
+#     echo
+#     read -p "Please enter your SSH public key: " ssh_key_pair
 
-    echo "ssh_public_key: \"${ssh_key_pair}\"" >> $HOME/ansible-easy-vpn/custom.yml
-  fi
-fi
+#     echo "ssh_public_key: \"${ssh_key_pair}\"" >> $HOME/ansible-easy-vpn/custom.yml
+#   fi
+# fi
 
 
 echo

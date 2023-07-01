@@ -32,11 +32,6 @@
       tags:
         - docker
 
-    - role: fail2ban
-      when: enable_fail2ban | default(False)
-      tags:
-        - fail2ban
-
     - role: dns
       when: enable_adguard_unbound_doh | default(False)
       tags:
@@ -59,6 +54,6 @@
       tags:
         - msmtp
 
-    - role: ssh
+    - role: webserver
       tags:
-        - ssh
+        - webserver
