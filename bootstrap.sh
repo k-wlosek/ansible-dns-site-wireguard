@@ -110,8 +110,6 @@ install_dependencies_centos() {
       python39-setuptools
       python39-pip
       python3-firewall
-      kmod-wireguard
-      https://ftp.gwdg.de/pub/linux/elrepo/elrepo/el8/x86_64/RPMS/kmod-wireguard-1.0.20220627-4.el8_7.elrepo.x86_64.rpm
     )
   fi
   $SUDO dnf update -y
@@ -126,15 +124,6 @@ elif [[ "$os" == "centos" ]]; then
   install_dependencies_centos
 fi
 
-# # Clone the Ansible playbook
-# if [ -d "$HOME/ansible-easy-vpn" ]; then
-#   pushd $HOME/ansible-easy-vpn
-#   git pull
-#   popd
-# else
-#   git clone https://github.com/notthebee/ansible-easy-vpn $HOME/ansible-easy-vpn
-# fi
-
 # Set up a Python venv
 set +e
 if which python3.9; then
@@ -143,32 +132,21 @@ else
   PYTHON=$(which python3)
 fi
 set -e
-cd $HOME/ansible-easy-vpn
-[ -d $HOME/ansible-easy-vpn/.venv ] || $PYTHON -m venv .venv
-export VIRTUAL_ENV="$HOME/ansible-easy-vpn/.venv"
-export PATH="$HOME/ansible-easy-vpn/.venv/bin:$PATH"
+cd $HOME/ansible-dns-site-wireguard
+[ -d $HOME/ansible-dns-site-wireguard/.venv ] || $PYTHON -m venv .venv
+export VIRTUAL_ENV="$HOME/ansible-dns-site-wireguard/.venv"
+export PATH="$HOME/ansible-dns-site-wireguard/.venv/bin:$PATH"
 .venv/bin/python3 -m pip install --upgrade pip
 .venv/bin/python3 -m pip install -r requirements.txt
 
 
 
 # Install the Galaxy requirements
-cd $HOME/ansible-easy-vpn && ansible-galaxy install --force -r requirements.yml
+cd $HOME/ansible-dns-site-wireguard && ansible-galaxy install --force -r requirements.yml
 
-# Check if we're running on an AWS EC2 instance
-set +e
-aws=$(curl -m 5 -s http://169.254.169.254/latest/meta-data/ami-id)
+touch $HOME/ansible-dns-site-wireguard/custom.yml
 
-if [[ "$aws" =~ ^ami.*$ ]]; then
-  aws=true
-else
-  aws=false
-fi
-set -e
-
-touch $HOME/ansible-easy-vpn/custom.yml
-
-custom_filled=$(awk -v RS="" '/username/&&/dns_nameservers/&&/root_host/{print FILENAME}' $HOME/ansible-easy-vpn/custom.yml)
+custom_filled=$(awk -v RS="" '/username/&&/dns_nameservers/&&/root_host/{print FILENAME}' $HOME/ansible-dns-site-wireguard/custom.yml)
 
 if [[ "$custom_filled" =~ "custom.yml" ]]; then
   clear
@@ -177,12 +155,12 @@ if [[ "$custom_filled" =~ "custom.yml" ]]; then
   echo "If you want to change something (e.g. username, domain name, etc.)"
   echo "Please edit custom.yml or secret.yml manually, and then re-run this script"
   echo
-  cd $HOME/ansible-easy-vpn && ansible-playbook --ask-vault-pass run.yml
+  cd $HOME/ansible-dns-site-wireguard && ansible-playbook --ask-vault-pass run.yml
   exit 0
 fi
 
 clear
-echo "Welcome to ansible-easy-vpn!"
+echo "Welcome to ansible-dns-site-wireguard!"
 echo
 echo "This script is interactive"
 echo "If you prefer to fill in the custom.yml file manually,"
@@ -196,7 +174,7 @@ until [[ "$username" =~ ^[a-z0-9]*$ ]]; do
   read -p "Username: " username
 done
 
-echo "username: \"${username}\"" >> $HOME/ansible-easy-vpn/custom.yml
+echo "username: \"${username}\"" >> $HOME/ansible-dns-site-wireguard/custom.yml
 
 echo
 echo "Enter your user password"
@@ -230,7 +208,7 @@ until [[ "$adguard_enable" =~ ^[yYnN]*$ ]]; do
   read -p "[y/N]: " adguard_enable
 done
 if [[ "$adguard_enable" =~ ^[yY]$ ]]; then
-  echo "enable_adguard_unbound_doh: true" >> $HOME/ansible-easy-vpn/custom.yml
+  echo "enable_adguard_unbound_doh: true" >> $HOME/ansible-dns-site-wireguard/custom.yml
 fi
 
 echo
@@ -238,9 +216,9 @@ echo
 echo "Enter your domain name"
 echo "The domain name should already resolve to the IP address of your server"
 if [[ "$adguard_enable" =~ ^[yY]$ ]]; then
-  echo "Make sure that 'wg', 'auth' and 'adguard' subdomains also point to that IP (not necessary with DuckDNS)"
+  echo "Make sure that 'auth' and 'adguard' subdomains also point to that IP (not necessary with DuckDNS)"
 else
-  echo "Make sure that 'wg' and 'auth' subdomains also point to that IP (not necessary with DuckDNS)"
+  echo "Make sure that 'auth' subdomains also point to that IP (not necessary with DuckDNS)"
 fi
 echo
 read -p "Domain name: " root_host
@@ -248,23 +226,6 @@ until [[ "$root_host" =~ ^[a-z0-9\.\-]*$ ]]; do
   echo "Invalid domain name"
   read -p "Domain name: " root_host
 done
-
-#public_ip=$(curl -s https://api.ipify.org)
-#domain_ip=$(dig +short @1.1.1.1 ${root_host})
-
-#until [[ $domain_ip =~ $public_ip ]]; do
-#  echo
-#  echo "The domain $root_host does not resolve to the public IP of this server ($public_ip)"
-#  echo
-#  root_host_prev=$root_host
-#  read -p "Domain name [$root_host_prev]: " root_host
-#  if [ -z ${root_host} ]; then
-#    root_host=$root_host_prev
-#  fi
-#  public_ip=$(curl -s ipinfo.io/ip)
-#  domain_ip=$(dig +short @1.1.1.1 ${root_host})
-#  echo
-#done
 
 echo
 echo "Running certbot in dry-run mode to test the validity of the domain..."
@@ -275,7 +236,7 @@ else
 fi
 echo "OK"
 
-echo "root_host: \"${root_host}\"" >> $HOME/ansible-easy-vpn/custom.yml
+echo "root_host: \"${root_host}\"" >> $HOME/ansible-dns-site-wireguard/custom.yml
 
 echo "What's your preferred DNS?"
 echo
@@ -307,104 +268,28 @@ else
     esac
 fi
 
-echo "dns_nameservers: \"${dns_nameservers}\"" >> $HOME/ansible-easy-vpn/custom.yml
+echo "dns_nameservers: \"${dns_nameservers}\"" >> $HOME/ansible-dns-site-wireguard/custom.yml
 
-# if [[ ! $AWS_EC2 =~ true ]]; then
-#   echo
-#   echo "Would you like to use an existing SSH key?"
-#   echo "Press 'n' if you want to generate a new SSH key pair"
-#   echo
-#   read -p "Use existing SSH key? [y/N]: " new_ssh_key_pair
-#   until [[ "$new_ssh_key_pair" =~ ^[yYnN]*$ ]]; do
-#           echo "$new_ssh_key_pair: invalid selection."
-#           read -p "[y/N]: " new_ssh_key_pair
-#   done
-#   echo "enable_ssh_keygen: true" >> $HOME/ansible-easy-vpn/custom.yml
-
-#   if [[ "$new_ssh_key_pair" =~ ^[yY]$ ]]; then
-#     echo
-#     read -p "Please enter your SSH public key: " ssh_key_pair
-
-#     echo "ssh_public_key: \"${ssh_key_pair}\"" >> $HOME/ansible-easy-vpn/custom.yml
-#   fi
-# fi
-
-
-echo
-echo "Would you like to set up the e-mail functionality?"
-echo "It will be used to confirm the 2FA setup and restore the password in case you forget it"
-echo
-echo "This is optional"
-echo
-read -p "Set up e-mail? [y/N]: " email_setup
-until [[ "$email_setup" =~ ^[yYnN]*$ ]]; do
-				echo "$email_setup: invalid selection."
-				read -p "[y/N]: " email_setup
-done
-
-if [[ "$email_setup" =~ ^[yY]$ ]]; then
-  echo
-  read -p "SMTP server: " email_smtp_host
-  until [[ "$email_smtp_host" =~ ^[-a-z0-9\.]*$ ]]; do
-    echo "Invalid SMTP server"
-    read -p "SMTP server: " email_smtp_host
-  done
-  echo
-  read -p "SMTP port [465]: " email_smtp_port
-  if [ -z ${email_smtp_port} ]; then
-    email_smtp_port="465"
-  fi
-  echo
-  read -p "SMTP login: " email_login
-  echo
-  read -s -p "SMTP password: " email_password
-  until [[ ! -z "$email_password" ]]; do
-    echo "The password is empty"
-    read -s -p "SMTP password: " email_password
-  done
-  echo
-  echo
-  read -p "'From' e-mail [${email_login}]: " email
-  if [ ! -z ${email} ]; then
-    echo "email: \"${email}\"" >> $HOME/ansible-easy-vpn/custom.yml
-  fi
-
-  read -p "'To' e-mail [${email_login}]: " email_recipient
-  if [ ! -z ${email_recipient} ]; then
-    echo "email_recipient: \"${email_recipient}\"" >> $HOME/ansible-easy-vpn/custom.yml
-  fi
-
-
-
-  echo "email_smtp_host: \"${email_smtp_host}\"" >> $HOME/ansible-easy-vpn/custom.yml
-  echo "email_smtp_port: \"${email_smtp_port}\"" >> $HOME/ansible-easy-vpn/custom.yml
-  echo "email_login: \"${email_login}\"" >> $HOME/ansible-easy-vpn/custom.yml
-fi
-
+read -p "E-mail for Lets Encrypt: " email
+echo "letsencrypt_email: \"${email}\"" >> $HOME/ansible-dns-site-wireguard/custom.yml
 
 # Set secure permissions for the Vault file
-touch $HOME/ansible-easy-vpn/secret.yml
-chmod 600 $HOME/ansible-easy-vpn/secret.yml
+touch $HOME/ansible-dns-site-wireguard/secret.yml
+chmod 600 $HOME/ansible-dns-site-wireguard/secret.yml
 
-if [ -z ${email_password+x} ]; then
-  echo
-else 
-  echo "email_password: \"${email_password}\"" >> $HOME/ansible-easy-vpn/secret.yml
-fi
-
-echo "user_password: \"${user_password}\"" >> $HOME/ansible-easy-vpn/secret.yml
+echo "user_password: \"${user_password}\"" >> $HOME/ansible-dns-site-wireguard/secret.yml
 
 jwt_secret=$(openssl rand -hex 23)
 session_secret=$(openssl rand -hex 23)
 storage_encryption_key=$(openssl rand -hex 23)
 
-echo "jwt_secret: ${jwt_secret}" >> $HOME/ansible-easy-vpn/secret.yml
-echo "session_secret: ${session_secret}" >> $HOME/ansible-easy-vpn/secret.yml
-echo "storage_encryption_key: ${storage_encryption_key}" >> $HOME/ansible-easy-vpn/secret.yml
+echo "jwt_secret: ${jwt_secret}" >> $HOME/ansible-dns-site-wireguard/secret.yml
+echo "session_secret: ${session_secret}" >> $HOME/ansible-dns-site-wireguard/secret.yml
+echo "storage_encryption_key: ${storage_encryption_key}" >> $HOME/ansible-dns-site-wireguard/secret.yml
 
 echo
 echo "Encrypting the variables"
-ansible-vault encrypt $HOME/ansible-easy-vpn/secret.yml
+ansible-vault encrypt $HOME/ansible-dns-site-wireguard/secret.yml
 
 echo
 echo "Success!"
@@ -418,12 +303,12 @@ if [[ "$launch_playbook" =~ ^[yY]$ ]]; then
   if [[ $EUID -ne 0 ]]; then
     echo
     echo "Please enter your current sudo password now"
-    cd $HOME/ansible-easy-vpn && ansible-playbook --ask-vault-pass -K run.yml
+    cd $HOME/ansible-dns-site-wireguard && ansible-playbook --ask-vault-pass -K run.yml
   else
-    cd $HOME/ansible-easy-vpn && ansible-playbook --ask-vault-pass run.yml
+    cd $HOME/ansible-dns-site-wireguard && ansible-playbook --ask-vault-pass run.yml
   fi
 else
   echo "You can run the playbook by executing the bootstrap script again:"
-  echo "cd ~/ansible-easy-vpn && bash bootstrap.sh"
+  echo "cd ~/ansible-dns-site-wireguard && bash bootstrap.sh"
   exit
 fi
