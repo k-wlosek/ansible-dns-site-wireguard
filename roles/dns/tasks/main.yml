@@ -22,6 +22,14 @@
     rsync_opts:
       - "--ignore-existing"
 
+- name: Teplate adguard-unbound Dockerfile
+  ansible.builtin.template:
+    src: Dockerfile.j2
+    dest: "{{ docker_dir }}/adguard-unbound-doh/build/Dockerfile"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: 0644
+
 - name: Build the adguard-unbound Docker image
   community.docker.docker_image:
     name: adguard-unbound-doh
@@ -30,14 +38,6 @@
     source: build
   notify: Restart adguard-unbound-doh
 
-# - name: Copy Adguard config
-#   ansible.posix.synchronize:
-#     src: AdGuardHome.yaml
-#     dest: "{{ docker_dir }}/adguard-unbound-doh/adguard/conf/AdGuardHome.yaml"
-#     rsync_opts:
-#       - "--ignore-existing"
-#   notify: Restart adguard-unbound-doh
-
 - name: Template the AdGuardHome config
   ansible.builtin.template:
     src: AdGuardHome.yaml.j2
@@ -45,6 +45,7 @@
     owner: "{{ username }}"
     group: "{{ username }}"
     mode: 0644
+  notify: Restart adguard-unbound-doh
 
 - name: Template the dnscrypt-proxy config
   ansible.builtin.template:
