@@ -5,7 +5,9 @@ A simple interactive script that sets up a Wireguard VPN server with Adguard, Un
 ## Usage
 
 ```
-git clone https://github.com/k-wlosek/ansible-dns-site-wireguard.git && bash bootstrap.sh
+git clone https://github.com/k-wlosek/ansible-dns-site-wireguard.git
+cd ansible-dns-site-wireguard
+bash bootstrap.sh
 ```
 
 ## Features
