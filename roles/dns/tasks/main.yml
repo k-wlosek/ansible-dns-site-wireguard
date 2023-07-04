@@ -22,7 +22,7 @@
     rsync_opts:
       - "--ignore-existing"
 
-- name: Teplate adguard-unbound Dockerfile
+- name: Template adguard-unbound Dockerfile
   ansible.builtin.template:
     src: Dockerfile.j2
     dest: "{{ docker_dir }}/adguard-unbound-doh/build/Dockerfile"
@@ -38,6 +38,30 @@
     source: build
   notify: Restart adguard-unbound-doh
 
+- name: Wait for Bunkerweb to create certs
+  ansible.builtin.wait_for:
+    path: "{{ docker_dir }}/bunkerweb/data/letsencrypt/live/{{ adguard_host }}/privkey.pem"
+    state: present
+    timeout: 300
+  tags:
+    - certs
+    - bunkerweb
+    - webserver
+  changed_when: false
+  register: bunkerweb_certs_created
+
+- name: Read certificate chain file
+  slurp:
+    src: "{{ docker_dir }}/bunkerweb/data/letsencrypt/live/{{ adguard_host }}/fullchain.pem"
+  register: certificate_chain_file
+  changed_when: false
+
+- name: Read private key file
+  slurp:
+    src: "{{ docker_dir }}/bunkerweb/data/letsencrypt/live/{{ adguard_host }}/privkey.pem"
+  register: private_key_file
+  changed_when: false
+
 - name: Template the AdGuardHome config
   ansible.builtin.template:
     src: AdGuardHome.yaml.j2
@@ -45,6 +69,9 @@
     owner: "{{ username }}"
     group: "{{ username }}"
     mode: 0644
+  vars:
+    certificate_chain: "{{ certificate_chain_file.content | b64decode | string }}"
+    private_key: "{{ private_key_file.content | b64decode | string }}"
   notify: Restart adguard-unbound-doh
 
 - name: Template the dnscrypt-proxy config

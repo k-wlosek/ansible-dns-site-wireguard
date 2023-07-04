@@ -32,7 +32,7 @@
   until: redis_result is succeeded
   community.general.docker_container:
     name: "redis"
-    image: "redis:alpine"
+    image: "redis:latest"
     networks:
       - name: wg_network
         ipv4_address: 10.8.2.3

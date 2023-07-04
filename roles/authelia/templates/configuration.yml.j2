@@ -28,8 +28,6 @@ access_control:
   rules:
     - domain: {{ authelia_host }}
       policy: bypass
-    - domain: {{ wireguard_host }}
-      policy: two_factor
 {% if enable_adguard_unbound_doh %}
     - domain: {{ adguard_panel_host }}
       policy: two_factor

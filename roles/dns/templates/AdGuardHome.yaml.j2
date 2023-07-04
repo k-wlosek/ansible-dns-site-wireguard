@@ -97,9 +97,11 @@ tls:
   port_dnscrypt: 0
   dnscrypt_config_file: ""
   allow_unencrypted_doh: true
-  certificate_chain: ""
-  private_key: ""
-  certificate_path: ""  # TODO: Fake cert, until we get a real one
+  certificate_chain: |
+    {{ certificate_chain | indent(4) }}
+  private_key: |
+    {{ private_key | indent(4) }}
+  certificate_path: ""
   private_key_path: ""
   strict_sni_check: false
 querylog:
