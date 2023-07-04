@@ -1,0 +1,17 @@
+---
+- name: Build the webserver Docker image
+  community.docker.docker_image:
+    name: "{{ webserver_image_name }}"
+    build:
+      path: "{{ webserver_dockerfile_path }}"
+    source: build
+
+- name: Deploy webserver container
+  community.docker.docker_container:
+    name: webserver
+    image: "{{ webserver_image_name }}"
+    state: started
+    restart_policy: unless-stopped
+    networks:
+      - name: wg_network
+        ipv4_address: 10.8.2.10
