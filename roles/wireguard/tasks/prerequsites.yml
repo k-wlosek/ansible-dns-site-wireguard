@@ -1,0 +1,41 @@
+---
+- name: Backup resolver file
+  ansible.builtin.copy:
+    src: "/etc/resolv.conf"
+    dest: "/etc/resolv.back"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Update APT cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install required packages
+  ansible.builtin.apt:
+    pkg:
+      - libmnl-dev
+      - make
+      - wireguard-tools
+      - resolvconf
+      - git
+    state: present
+
+- name: Stop and disable resolvconf
+  ansible.builtin.service:
+    name: resolvconf
+    state: stopped
+    enabled: no
+
+- name: Restore the original resolver file
+  ansible.builtin.copy:
+    src: "/etc/resolv.back"
+    dest: "/etc/resolv.conf"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Ensure TUN/TAP is present
+  ansible.builtin.stat:
+    path: /dev/net/tun

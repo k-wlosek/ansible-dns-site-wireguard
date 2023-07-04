@@ -1,6 +1,5 @@
 [Interface]
 Address = 10.5.0.1/24
-DNS = {{ wg_dns }}
 PrivateKey = {{ server_private_key.content | b64decode | replace('\n', '') }}
 ListenPort = {{ wg_port }}
 

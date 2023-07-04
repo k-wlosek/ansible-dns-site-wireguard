@@ -1,0 +1,61 @@
+---
+- name: Get wireguard-go source
+  ansible.builtin.get_url:
+    url: "https://git.zx2c4.com/wireguard-go/snapshot/wireguard-go-{{ wireguard_go_version }}.tar.xz"
+    dest: "/tmp/wireguard-go-{{ wireguard_go_version }}.tar.xz"
+    owner: root
+    group: root
+    mode: "0644"
+  register: get_wireguard_go_source
+  changed_when: get_wireguard_go_source.changed
+
+- name: Create /tmp/wireguard-go directory
+  ansible.builtin.file:
+    path: "/tmp/wireguard-go"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: not get_wireguard_go_source.changed
+
+- name: Extract wireguard-go source
+  ansible.builtin.unarchive:
+    src: "/tmp/wireguard-go-{{ wireguard_go_version }}.tar.xz"
+    dest: "/tmp/wireguard-go"
+    owner: root
+    group: root
+    mode: "0644"
+    remote_src: yes
+    extra_opts: "--strip-components=1"
+  register: extract_wireguard_go_source
+  changed_when: extract_wireguard_go_source.changed
+
+- name: Get wireguard-tools
+  ansible.builtin.git:
+    repo: "https://git.zx2c4.com/wireguard-tools"
+    dest: "/tmp/wireguard-tools"
+  register: get_wireguard_tools
+  changed_when: get_wireguard_tools.changed
+
+- name: Build wireguard-tools
+  ansible.builtin.shell: |
+    cd /tmp/wireguard-tools/src
+    make
+    make install
+  changed_when: false
+
+- name: Build wireguard-go
+  ansible.builtin.shell: |
+    cd /tmp/wireguard-go && make
+  changed_when: false
+  become: true
+
+- name: Copy wireguard-go to /usr/bin
+  ansible.builtin.copy:
+    src: "/tmp/wireguard-go/wireguard-go"
+    dest: "/usr/bin/wireguard-go"
+    owner: root
+    group: root
+    mode: "0755"
+    remote_src: true
+  changed_when: false

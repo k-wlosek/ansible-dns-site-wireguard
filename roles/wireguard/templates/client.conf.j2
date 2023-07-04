@@ -1,7 +1,6 @@
 [Interface]
 Address = 10.5.0.{{ item+2 }}/32
 PrivateKey = {{ client_private_keys[item-1] | replace('\n', '') }}
-DNS = {{ wg_dns }}
 
 [Peer]
 PublicKey = {{ server_public_key.content | b64decode | replace('\n', '') }}

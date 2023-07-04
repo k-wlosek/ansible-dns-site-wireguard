@@ -1,0 +1,42 @@
+---
+- name: Get golang
+  ansible.builtin.get_url:
+    url: "https://dl.google.com/go/go{{ golang_version }}.linux-amd64.tar.gz"
+    dest: "/tmp/go{{ golang_version }}.linux-amd64.tar.gz"
+  register: get_golang
+  changed_when: get_golang.changed
+
+- name: Extract golang
+  ansible.builtin.unarchive:
+    src: "/tmp/go{{ golang_version }}.linux-amd64.tar.gz"
+    dest: "/usr/local"
+    remote_src: yes
+  changed_when: false
+
+- name: Add GOROOT to PATH
+  ansible.builtin.lineinfile:
+    path: /etc/profile
+    line: "export GOROOT=/usr/local/go"
+    state: present
+    create: yes
+  changed_when: false
+
+- name: Add golang to PATH
+  ansible.builtin.lineinfile:
+    path: /etc/profile
+    line: "export PATH=$PATH:$GOPATH/bin:$GOROOT/bin"
+    state: present
+    create: yes
+  changed_when: false
+
+- name: Source /etc/profile
+  ansible.builtin.shell: |
+    . /etc/profile
+  changed_when: false
+
+- name: Add symlink for golang
+  ansible.builtin.file:
+    src: "/usr/local/go/bin/go"
+    dest: "/usr/bin/go"
+    state: link
+  changed_when: false
