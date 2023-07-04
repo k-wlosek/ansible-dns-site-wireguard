@@ -8,21 +8,25 @@ all:
       ansible_connection: local
 
   vars:
-    username: notthebee
+    username: kw
 
     authelia_host: "auth.{{ root_host }}"
-
-    wireguard_host: "wg.{{ root_host }}"
-
-    wireguard_subnet: "10.8.0.x"
 
     adguard_host: "adguard.{{ root_host }}"
     adguard_panel_host: "agadmin.{{ root_host }}"
 
+    # This will enable Adguard and the webserver
+    # with URLs for resolver, admin panel and webserver
+    #
+    # Webserver needs to be able to run as a Docker container
     enable_adguard_and_webserver: true
+    webserver_dockerfile_path: ""
+    webserver_image_name: ""
     webserver_host: "me.{{ root_host }}"
 
-    wireguard_port: "51820"
+    wg_clients: 2
+    server_ip: ""
+    wg_port: 51820
 
     # Possible choices: cloudflare, quad9, google
     #

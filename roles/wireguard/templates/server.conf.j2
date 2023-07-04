@@ -1,11 +1,11 @@
 [Interface]
 Address = 10.5.0.1/24
 DNS = {{ wg_dns }}
-PrivateKey = {{ server_private_key.content | replace('\n', '') }}
-ListenPort = 20287
+PrivateKey = {{ server_private_key.content | b64decode | replace('\n', '') }}
+ListenPort = {{ wg_port }}
 
 {% for i in range(1, wg_clients + 1) %}
 [Peer]
-PublicKey = {{ client_public_keys[i-1].content | replace('\n', '') }}
-AllowedIPs = 10.5.0.0/24
+PublicKey = {{ client_public_keys[i-1] | replace('\n', '') }}
+AllowedIPs = 10.5.0.{{ i+2 }}/32
 {% endfor %}

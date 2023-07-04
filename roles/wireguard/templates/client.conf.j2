@@ -1,12 +1,9 @@
-{% for i in range(1, wg_clients + 1) %}
 [Interface]
-Address = 10.5.0.{{ i }}/24
-PrivateKey = {{ client_private_keys[i-1].content | replace('\n', '') }}
+Address = 10.5.0.{{ item+2 }}/32
+PrivateKey = {{ client_private_keys[item-1] | replace('\n', '') }}
 DNS = {{ wg_dns }}
 
 [Peer]
-PublicKey = {{ server_public_key.content | replace('\n', '') }}
+PublicKey = {{ server_public_key.content | b64decode | replace('\n', '') }}
 AllowedIPs = 10.5.0.0/24
-Endpoint = :20287
-
-{% endfor %}
+Endpoint = {{ server_ip }}:{{ wg_port }}
