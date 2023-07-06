@@ -22,7 +22,7 @@ dns:
   protection_disabled_until: null
   parental_block_host: family-block.dns.adguard.com
   safebrowsing_block_host: standard-block.dns.adguard.com
-  ratelimit: 20
+  ratelimit: 100
   ratelimit_whitelist: []
   refuse_any: true
   upstream_dns:
@@ -48,7 +48,7 @@ dns:
   cache_optimistic: false
   bogus_nxdomain: []
   aaaa_disabled: false
-  enable_dnssec: false
+  enable_dnssec: true
   edns_client_subnet:
     custom_ip: ""
     enabled: false
@@ -112,9 +112,25 @@ querylog:
   file_enabled: true
 statistics:
   ignored: []
-  interval: 24h
+  interval: 2160h
   enabled: true
-filters: []
+filters:
+  - enabled: true
+    url: https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/pro.txt
+    name: HaGeZi Pro
+    id: 1688574115
+  - enabled: true
+    url: https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/native.apple.txt
+    name: HaGeZi Apple
+    id: 1688574116
+  - enabled: true
+    url: https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/native.winoffice.txt
+    name: HaGeZi Microsoft
+    id: 1688574117
+  - enabled: true
+    url: https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/native.tiktok.txt
+    name: HaGeZi TikTok
+    id: 1688574118
 whitelist_filters: []
 user_rules: []
 dhcp:
