@@ -52,3 +52,8 @@
     - role: webserver
       tags:
         - webserver
+
+    - role: plausible
+      when: enable_plausible | default(False)
+      tags:
+        - plausible

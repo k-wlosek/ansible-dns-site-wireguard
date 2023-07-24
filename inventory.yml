@@ -24,6 +24,9 @@ all:
     webserver_image_name: ""
     webserver_host: "me.{{ root_host }}"
 
+    enable_plausible: false
+    plausible_host: "plausible.{{ root_host }}"
+
     wg_clients: 2
     server_ip: ""
     wg_port: 51820
@@ -78,6 +81,12 @@ all:
 
     pip_install_packages:
       - name: docker
+      - name: docker-compose
 
     docker_users:
       - "{{ username }}"
+    
+    docker_install_compose: true
+    docker_compose_version: "1.29.2"
+    docker_compose_arch: "{{ ansible_architecture }}"
+    docker_compose_path: /usr/local/bin/docker-compose

@@ -1,0 +1,44 @@
+---
+- name: Ensure openssl is installed
+  ansible.builtin.package:
+    name: openssl
+    state: present
+
+- name: Create secret key
+  ansible.builtin.shell: openssl rand -base64 64 | tr -d '\n' ; echo
+  register: secret_key_base
+  changed_when: false
+
+- name: Create the Plausible folder
+  ansible.builtin.file:
+    path: "{{ docker_dir }}/plausible"
+    state: directory
+    owner: root
+    group: 101
+    mode: 0770
+
+- name: Copy the docker folder to {{ docker_dir }}
+  ansible.posix.synchronize:
+    src: "{{ role_path }}/files/"
+    dest: "{{ docker_dir }}/plausible/"
+    recursive: yes
+    rsync_opts:
+      - "--ignore-existing"
+
+- name: Template Plausible config
+  ansible.builtin.template:
+    src: plausible-conf.env.j2
+    dest: "{{ docker_dir }}/plausible/plausible-conf.env"
+    owner: root
+    group: 101
+    mode: 0640
+
+- name: Compose up
+  community.general.docker_compose:
+    project_src: "{{ docker_dir }}/plausible"
+    state: present
+  register: compose_up
+  until: compose_up is succeeded
+  retries: 5
+  delay: 10
+  changed_when: false
