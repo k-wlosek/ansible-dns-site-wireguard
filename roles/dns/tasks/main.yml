@@ -50,18 +50,6 @@
   changed_when: false
   register: bunkerweb_certs_created
 
-- name: Read certificate chain file
-  slurp:
-    src: "{{ docker_dir }}/bunkerweb/data/letsencrypt/live/{{ adguard_host }}/fullchain.pem"
-  register: certificate_chain_file
-  changed_when: false
-
-- name: Read private key file
-  slurp:
-    src: "{{ docker_dir }}/bunkerweb/data/letsencrypt/live/{{ adguard_host }}/privkey.pem"
-  register: private_key_file
-  changed_when: false
-
 - name: Template the AdGuardHome config
   ansible.builtin.template:
     src: AdGuardHome.yaml.j2
@@ -96,3 +84,5 @@
       - "{{ docker_dir }}/adguard-unbound-doh/dnscrypt-proxy/dnscrypt-proxy.toml:/etc/dnscrypt-proxy/dnscrypt-proxy.toml:ro"
       - "{{ docker_dir }}/adguard-unbound-doh/adguard/work:/opt/adguardhome/work"
       - "{{ docker_dir }}/adguard-unbound-doh/adguard/conf:/opt/adguardhome/conf"
+      - "{{ docker_dir }}/bunkerweb/data/letsencrypt/live/{{ adguard_host }}/fullchain.pem:/opt/adguardhome/conf/fullchain.pem:ro"
+      - "{{ docker_dir }}/bunkerweb/data/letsencrypt/live/{{ adguard_host }}/privkey.pem:/opt/adguardhome/conf/privkey.pem:ro"

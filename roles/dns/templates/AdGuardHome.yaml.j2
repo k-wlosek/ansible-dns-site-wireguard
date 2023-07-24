@@ -97,12 +97,10 @@ tls:
   port_dnscrypt: 0
   dnscrypt_config_file: ""
   allow_unencrypted_doh: true
-  certificate_chain: |
-    {{ certificate_chain | indent(4) }}
-  private_key: |
-    {{ private_key | indent(4) }}
-  certificate_path: ""
-  private_key_path: ""
+  certificate_chain: ""
+  private_key: ""
+  certificate_path: /opt/adguardhome/conf/fullchain.pem
+  private_key_path: /opt/adguardhome/conf/privkey.pem
   strict_sni_check: false
 querylog:
   ignored: []
