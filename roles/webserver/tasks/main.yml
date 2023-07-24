@@ -6,6 +6,14 @@
       path: "{{ webserver_dockerfile_path }}"
     source: build
 
+- name: Copy NGINX config
+  ansible.builtin.copy:
+    src: nginx.conf
+    dest: "{{ docker_dir }}/webserver/nginx.conf"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: 0644
+
 - name: Deploy webserver container
   community.docker.docker_container:
     name: webserver
@@ -15,3 +23,5 @@
     networks:
       - name: wg_network
         ipv4_address: 10.8.2.10
+    volumes:
+      - "{{ docker_dir }}/webserver/nginx.conf:/etc/nginx/nginx.conf"
