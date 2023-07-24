@@ -16,6 +16,8 @@ bash bootstrap.sh
 * Encrypted DNS resolution with optional ad-blocking functionality (Adguard Home, DNSCrypt and Unbound)
 * Two-factor authentication for the AdGuard panel (Authelia)
 * Automatic certificates using Let's Encrypt
+* Your custom service in Docker (webserver)
+* Privacy-respecting analytics for your website (Plausible)
 
 ## Requirements
 * A KVM-based VPS (or an AWS EC2 instance) with a dedicated IPv4 address
